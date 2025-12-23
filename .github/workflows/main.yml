@@ -33,8 +33,8 @@ jobs:
           Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
           Remove-Item -Force *.spec -ErrorAction SilentlyContinue
 
-      - name: Gerar EXE
-        run: pyinstaller --onefile buscador_pdf.py
+      - name: Gerar EXE sem console
+        run: pyinstaller --onefile --windowed buscador_pdf.py
 
       - name: Upload artefato
         uses: actions/upload-artifact@v4
