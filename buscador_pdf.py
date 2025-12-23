@@ -143,3 +143,4 @@ resultados_box = ctk.CTkTextbox(frame, width=800, height=250)
 resultados_box.pack(pady=5)
 
 root.mainloop()
+
