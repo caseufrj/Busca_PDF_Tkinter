@@ -107,6 +107,7 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 root = ctk.CTk()
+root.iconbitmap("icone_app.ico")
 root.title("Buscador de PDFs com OCR + pdfminer")
 root.geometry("900x800")
 
