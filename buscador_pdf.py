@@ -43,7 +43,6 @@ def buscar_em_pdfs(pasta, termo):
                     debug_box.insert("end", texto_pdfminer[:300] + "\n\n")
 
                     texto_normalizado = limpar_ocr(normalizar(texto_pdfminer))
-                    # 🔧 Busca tolerante
                     if termo_normalizado in texto_normalizado:
                         trecho = destacar_termo(texto_pdfminer[:500], termo)
                         resultados.append((arquivo, "?", trecho, "Texto embutido"))
@@ -55,12 +54,13 @@ def buscar_em_pdfs(pasta, termo):
                         texto = pagina.extract_text()
                         origem = "Texto embutido"
                         if not texto:
-                            imagens = convert_from_path(caminho, dpi=300, first_page=i+1, last_page=i+1)
-                            # 🔧 OCR configurado para números/letras
+                            # 🔧 DPI maior para etiquetas
+                            imagens = convert_from_path(caminho, dpi=400, first_page=i+1, last_page=i+1)
+                            # 🔧 OCR em modo linha única
                             texto = pytesseract.image_to_string(
                                 preprocessar(imagens[0]),
                                 lang="por",
-                                config="--psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                config="--psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                             )
                             origem = "OCR"
 
@@ -73,7 +73,6 @@ def buscar_em_pdfs(pasta, termo):
                         debug_box.insert("end", texto_limpo[:300] + "\n\n")
 
                         texto_normalizado = limpar_ocr(normalizar(texto_limpo))
-                        # 🔧 Busca tolerante
                         if termo_normalizado in texto_normalizado:
                             trecho = destacar_termo(texto_limpo[:500], termo)
                             resultados.append((arquivo, i+1, trecho, origem))
