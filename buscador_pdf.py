@@ -49,34 +49,25 @@ def buscar_em_pdfs(pasta, termo):
                         resultados_box.insert("end", f"📄 Arquivo: {arquivo} | Página: ? | Origem: Texto embutido\nTrecho: {trecho}\n\n")
                     continue
 
-                with pdfplumber.open(caminho) as pdf:
-                    for i, pagina in enumerate(pdf.pages):
-                        texto = pagina.extract_text()
-                        origem = "Texto embutido"
-                        if not texto:
-                            # 🔧 DPI maior para etiquetas
-                            imagens = convert_from_path(caminho, dpi=400, first_page=i+1, last_page=i+1)
-                            # 🔧 OCR em modo linha única
-                            texto = pytesseract.image_to_string(
-                                preprocessar(imagens[0]),
-                                lang="por",
-                                config="--psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                            )
-                            origem = "OCR"
+                # 🔧 OCR batch: processa todas as páginas de uma vez
+                imagens = convert_from_path(caminho, dpi=400)
+                texto_total = ""
+                for i, img in enumerate(imagens):
+                    texto_total += pytesseract.image_to_string(
+                        preprocessar(img),
+                        lang="por",
+                        config="--psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    ) + "\n"
 
-                            # 🔎 Mostra no debug o texto bruto do OCR
-                            debug_box.insert("end", f"[OCR bruto] Arquivo: {arquivo} | Página: {i+1}\n{texto}\n\n")
+                # 🔎 Debug do OCR batch
+                debug_box.insert("end", f"[OCR batch] Arquivo: {arquivo}\n{texto_total[:500]}\n\n")
 
-                        texto_limpo = texto.replace("\n", " ").strip()
+                texto_normalizado = limpar_ocr(normalizar(texto_total))
+                if termo_normalizado in texto_normalizado:
+                    trecho = destacar_termo(texto_total[:500], termo)
+                    resultados.append((arquivo, "OCR batch", trecho, "OCR"))
+                    resultados_box.insert("end", f"📄 Arquivo: {arquivo} | Origem: OCR batch\nTrecho: {trecho}\n\n")
 
-                        debug_box.insert("end", f"[DEBUG] Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\n")
-                        debug_box.insert("end", texto_limpo[:300] + "\n\n")
-
-                        texto_normalizado = limpar_ocr(normalizar(texto_limpo))
-                        if termo_normalizado in texto_normalizado:
-                            trecho = destacar_termo(texto_limpo[:500], termo)
-                            resultados.append((arquivo, i+1, trecho, origem))
-                            resultados_box.insert("end", f"📄 Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\nTrecho: {trecho}\n\n")
             except Exception as e:
                 debug_box.insert("end", f"[DEBUG] Erro ao abrir {arquivo}: {e}\n")
     return resultados
