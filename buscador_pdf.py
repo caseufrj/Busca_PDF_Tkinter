@@ -43,9 +43,9 @@ def buscar_em_pdfs(pasta, termo):
                     debug_box.insert("end", texto_pdfminer[:300] + "\n\n")
 
                     texto_normalizado = limpar_ocr(normalizar(texto_pdfminer))
-                    # 🔧 Regex exata
-                    if re.search(rf"\b{re.escape(termo_normalizado)}\b", texto_normalizado):
-                        trecho = destacar_termo(texto_pdfminer[:200], termo)
+                    # 🔧 Busca tolerante
+                    if termo_normalizado in texto_normalizado:
+                        trecho = destacar_termo(texto_pdfminer[:500], termo)
                         resultados.append((arquivo, "?", trecho, "Texto embutido"))
                         resultados_box.insert("end", f"📄 Arquivo: {arquivo} | Página: ? | Origem: Texto embutido\nTrecho: {trecho}\n\n")
                     continue
@@ -63,15 +63,19 @@ def buscar_em_pdfs(pasta, termo):
                                 config="--psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                             )
                             origem = "OCR"
+
+                            # 🔎 Mostra no debug o texto bruto do OCR
+                            debug_box.insert("end", f"[OCR bruto] Arquivo: {arquivo} | Página: {i+1}\n{texto}\n\n")
+
                         texto_limpo = texto.replace("\n", " ").strip()
 
                         debug_box.insert("end", f"[DEBUG] Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\n")
                         debug_box.insert("end", texto_limpo[:300] + "\n\n")
 
                         texto_normalizado = limpar_ocr(normalizar(texto_limpo))
-                        # 🔧 Regex exata
-                        if re.search(rf"\b{re.escape(termo_normalizado)}\b", texto_normalizado):
-                            trecho = destacar_termo(texto_limpo[:200], termo)
+                        # 🔧 Busca tolerante
+                        if termo_normalizado in texto_normalizado:
+                            trecho = destacar_termo(texto_limpo[:500], termo)
                             resultados.append((arquivo, i+1, trecho, origem))
                             resultados_box.insert("end", f"📄 Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\nTrecho: {trecho}\n\n")
             except Exception as e:
