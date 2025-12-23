@@ -10,10 +10,10 @@ from pdfminer.high_level import extract_text
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
-# 🔧 Caminho do Tesseract
+# Caminho do Tesseract
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-# 🔧 Funções auxiliares
+# Funções auxiliares
 def normalizar(texto):
     return unicodedata.normalize("NFKD", texto).encode("ASCII", "ignore").decode("ASCII").lower()
 
@@ -30,7 +30,7 @@ def preprocessar(imagem):
 def destacar_termo(texto, termo):
     return re.sub(f"({re.escape(termo)})", r">>>\1<<<", texto, flags=re.IGNORECASE)
 
-# 🔍 Função principal de busca
+# Função principal de busca
 def buscar_em_pdfs(pasta, termo):
     resultados = []
     termo_normalizado = limpar_ocr(normalizar(termo))
@@ -72,7 +72,7 @@ def buscar_em_pdfs(pasta, termo):
                 debug_box.insert("end", f"[DEBUG] Erro ao abrir {arquivo}: {e}\n")
     return resultados
 
-# 🔘 Botões e interface
+# Botões e interface
 def iniciar_busca():
     resultados_box.delete("1.0", "end")
     debug_box.delete("1.0", "end")
@@ -102,7 +102,7 @@ def exportar_csv():
                 writer.writerow([arquivo, pagina, trecho, origem])
         messagebox.showinfo("Exportação", f"Resultados exportados para '{filename}'.")
 
-# 🎨 Interface CustomTkinter
+# Interface CustomTkinter
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
@@ -113,11 +113,11 @@ root.geometry("900x800")
 frame = ctk.CTkFrame(root, fg_color="transparent")
 frame.pack(padx=20, pady=20, fill="both", expand=True)
 
-# 🖼️ Carregar ícones
+# Carregar ícones
 icone_busca = ctk.CTkImage(light_image=Image.open("icone_busca.png"), size=(32, 32))
 icone_download = ctk.CTkImage(light_image=Image.open("icone_download.png"), size=(32, 32))
 
-# 🔠 Título com ícone
+# Título com ícone de lupa
 ctk.CTkLabel(frame, image=icone_busca, text="Buscador de PDFs", compound="left").pack(pady=5)
 
 ctk.CTkLabel(frame, text="Selecione a pasta dos PDFs:").pack()
@@ -129,7 +129,7 @@ ctk.CTkLabel(frame, text="Digite a palavra ou número:").pack()
 termo_entry = ctk.CTkEntry(frame, width=300)
 termo_entry.pack(pady=5)
 
-# 🔘 Botões com ícones
+# Botões com ícones
 ctk.CTkButton(frame, image=icone_busca, text="Buscar", compound="left", command=iniciar_busca).pack(pady=5)
 ctk.CTkButton(frame, image=icone_download, text="Exportar CSV", compound="left", command=exportar_csv).pack(pady=5)
 
