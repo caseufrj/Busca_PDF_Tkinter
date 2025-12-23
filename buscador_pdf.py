@@ -7,8 +7,8 @@ import re
 from pdf2image import convert_from_path
 from PIL import Image, ImageEnhance, ImageFilter
 from pdfminer.high_level import extract_text
-import tkinter as tk
-from tkinter import filedialog, scrolledtext, messagebox
+import customtkinter as ctk
+from tkinter import filedialog, messagebox
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -37,13 +37,13 @@ def buscar_em_pdfs(pasta, termo):
             try:
                 texto_pdfminer = extract_text(caminho)
                 if texto_pdfminer:
-                    debug.insert(tk.END, f"[DEBUG] Arquivo: {arquivo} | Origem: Texto embutido\n")
-                    debug.insert(tk.END, texto_pdfminer[:300] + "\n\n")
+                    debug_box.insert("end", f"[DEBUG] Arquivo: {arquivo} | Origem: Texto embutido\n")
+                    debug_box.insert("end", texto_pdfminer[:300] + "\n\n")
 
                     if termo_normalizado in limpar_ocr(normalizar(texto_pdfminer)):
                         trecho = destacar_termo(texto_pdfminer[:200], termo)
                         resultados.append((arquivo, "?", trecho, "Texto embutido"))
-                        resultados_box.insert(tk.END, f"📄 Arquivo: {arquivo} | Página: ? | Origem: Texto embutido\nTrecho: {trecho}\n\n")
+                        resultados_box.insert("end", f"📄 Arquivo: {arquivo} | Página: ? | Origem: Texto embutido\nTrecho: {trecho}\n\n")
                     continue
 
                 with pdfplumber.open(caminho) as pdf:
@@ -56,21 +56,21 @@ def buscar_em_pdfs(pasta, termo):
                             origem = "OCR"
                         texto_limpo = texto.replace("\n", " ").strip()
 
-                        debug.insert(tk.END, f"[DEBUG] Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\n")
-                        debug.insert(tk.END, texto_limpo[:300] + "\n\n")
+                        debug_box.insert("end", f"[DEBUG] Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\n")
+                        debug_box.insert("end", texto_limpo[:300] + "\n\n")
 
                         texto_normalizado = limpar_ocr(normalizar(texto_limpo))
                         if termo_normalizado in texto_normalizado:
                             trecho = destacar_termo(texto_limpo[:200], termo)
                             resultados.append((arquivo, i+1, trecho, origem))
-                            resultados_box.insert(tk.END, f"📄 Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\nTrecho: {trecho}\n\n")
+                            resultados_box.insert("end", f"📄 Arquivo: {arquivo} | Página: {i+1} | Origem: {origem}\nTrecho: {trecho}\n\n")
             except Exception as e:
-                debug.insert(tk.END, f"[DEBUG] Erro ao abrir {arquivo}: {e}\n")
+                debug_box.insert("end", f"[DEBUG] Erro ao abrir {arquivo}: {e}\n")
     return resultados
 
 def iniciar_busca():
-    resultados_box.delete(1.0, tk.END)
-    debug.delete(1.0, tk.END)
+    resultados_box.delete("1.0", "end")
+    debug_box.delete("1.0", "end")
     pasta = pasta_entry.get()
     termo = termo_entry.get()
     if not pasta or not termo:
@@ -78,10 +78,11 @@ def iniciar_busca():
         return
     global resultados
     resultados = buscar_em_pdfs(pasta, termo)
+    resultados_box.insert("end", f"🔍 Resultado para a busca: {termo}\n\n")
     if resultados:
-        resultados_box.insert(tk.END, "✅ Busca concluída! Resultados exibidos acima.\n")
+        resultados_box.insert("end", "✅ Busca concluída! Resultados exibidos acima.\n")
     else:
-        resultados_box.insert(tk.END, "Nenhum resultado encontrado.\n")
+        resultados_box.insert("end", "Nenhum resultado encontrado.\n")
 
 def exportar_csv():
     if not resultados:
@@ -96,28 +97,35 @@ def exportar_csv():
                 writer.writerow([arquivo, pagina, trecho, origem])
         messagebox.showinfo("Exportação", f"Resultados exportados para '{filename}'.")
 
-# Interface Tkinter
-root = tk.Tk()
+# Interface CustomTkinter
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
+
+root = ctk.CTk()
 root.title("Buscador de PDFs com OCR + pdfminer")
+root.geometry("900x800")
 
-tk.Label(root, text="Selecione a pasta dos PDFs:").pack()
-pasta_entry = tk.Entry(root, width=80)
-pasta_entry.pack()
-tk.Button(root, text="Escolher Pasta", command=lambda: pasta_entry.insert(0, filedialog.askdirectory())).pack()
+frame = ctk.CTkFrame(root, fg_color="transparent")
+frame.pack(padx=20, pady=20, fill="both", expand=True)
 
-tk.Label(root, text="Digite a palavra ou número:").pack()
-termo_entry = tk.Entry(root, width=40)
-termo_entry.pack()
+ctk.CTkLabel(frame, text="Selecione a pasta dos PDFs:").pack()
+pasta_entry = ctk.CTkEntry(frame, width=600)
+pasta_entry.pack(pady=5)
+ctk.CTkButton(frame, text="Escolher Pasta", command=lambda: pasta_entry.insert(0, filedialog.askdirectory())).pack()
 
-tk.Button(root, text="Buscar", command=iniciar_busca).pack()
-tk.Button(root, text="Exportar CSV", command=exportar_csv).pack()
+ctk.CTkLabel(frame, text="Digite a palavra ou número:").pack()
+termo_entry = ctk.CTkEntry(frame, width=300)
+termo_entry.pack(pady=5)
 
-tk.Label(root, text="Debug (texto lido):").pack()
-debug = scrolledtext.ScrolledText(root, width=100, height=15)
-debug.pack()
+ctk.CTkButton(frame, text="Buscar", command=iniciar_busca).pack(pady=5)
+ctk.CTkButton(frame, text="Exportar CSV", command=exportar_csv).pack(pady=5)
 
-tk.Label(root, text="Resultados da busca:").pack()
-resultados_box = scrolledtext.ScrolledText(root, width=100, height=15)
-resultados_box.pack()
+ctk.CTkLabel(frame, text="Debug (texto lido):").pack()
+debug_box = ctk.CTkTextbox(frame, width=800, height=200)
+debug_box.pack(pady=5)
+
+ctk.CTkLabel(frame, text="Resultados da busca:").pack()
+resultados_box = ctk.CTkTextbox(frame, width=800, height=250)
+resultados_box.pack(pady=5)
 
 root.mainloop()
