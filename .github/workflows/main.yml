@@ -1,0 +1,43 @@
+name: Build buscador_pdf
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install customtkinter pdfplumber pdf2image pytesseract pyinstaller pillow
+
+      - name: Instalar Tesseract OCR
+        run: choco install -y tesseract
+
+      - name: Adicionar Tesseract ao PATH
+        run: echo "C:\Program Files\Tesseract-OCR" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+      - name: Limpar builds anteriores
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
+          Remove-Item -Force *.spec -ErrorAction SilentlyContinue
+
+      - name: Gerar EXE
+        run: pyinstaller --onefile buscador_pdf.py
+
+      - name: Upload artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: buscador_pdf_exe
+          path: dist/buscador_pdf.exe
